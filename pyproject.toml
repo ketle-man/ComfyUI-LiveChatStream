@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-livechatstream"
+description = "Chat with an LLM / VLM / VLA (Ollama) and turn the streaming reply into images - generate while the reply is still streaming, with two prompt lanes, characters, I2I and VRAM management"
+version = "0.6.0"
+license = { file = "LICENSE" }
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/ketle-man/ComfyUI-LiveChatStream"
+
+[tool.comfy]
+PublisherId = "statsu"
+DisplayName = "ComfyUI-LiveChatStream"
+Icon = "https://raw.githubusercontent.com/ketle-man/ComfyUI-LiveChatStream/master/docs/thumb.png"

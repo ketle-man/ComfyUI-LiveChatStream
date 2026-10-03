@@ -1,0 +1,55 @@
+{
+  "LiveChatStream": {
+    "display_name": "Live Chat Stream",
+    "description": "Ollama の LLM / VLM / VLA とチャットし、ストリーミング応答を画像にします。画像の入出力で I2I にも対応します。",
+    "inputs": {
+      "prompt_text": {
+        "name": "ポジティブ (A)"
+      },
+      "negative_text": {
+        "name": "ネガティブ (A)"
+      },
+      "response_text": {
+        "name": "応答"
+      },
+      "chat_p_text": {
+        "name": "chat_p"
+      },
+      "chat_n_text": {
+        "name": "chat_n"
+      },
+      "thinking_text": {
+        "name": "思考"
+      },
+      "image": {
+        "name": "画像"
+      },
+      "input_image_name": {
+        "name": "I2Iソースのファイル"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "ポジティブ"
+      },
+      "1": {
+        "name": "ネガティブ"
+      },
+      "2": {
+        "name": "応答"
+      },
+      "3": {
+        "name": "chat_p"
+      },
+      "4": {
+        "name": "chat_n"
+      },
+      "5": {
+        "name": "思考"
+      },
+      "6": {
+        "name": "画像"
+      }
+    }
+  }
+}

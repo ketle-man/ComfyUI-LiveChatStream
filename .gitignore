@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.playwright-mcp/
+*.png.tmp
+# 開発の入力に使ったベースワークフロー(サンプルは workflows/ にある)
+/chat_lcm.json

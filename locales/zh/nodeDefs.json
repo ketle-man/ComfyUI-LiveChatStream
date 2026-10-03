@@ -1,0 +1,55 @@
+{
+  "LiveChatStream": {
+    "display_name": "Live Chat Stream",
+    "description": "通过 Ollama 与 LLM / VLM / VLA 聊天,并将流式回复转为图片。通过图片输入 / 输出支持 I2I。",
+    "inputs": {
+      "prompt_text": {
+        "name": "正向 (A)"
+      },
+      "negative_text": {
+        "name": "负向 (A)"
+      },
+      "response_text": {
+        "name": "回复"
+      },
+      "chat_p_text": {
+        "name": "chat_p"
+      },
+      "chat_n_text": {
+        "name": "chat_n"
+      },
+      "thinking_text": {
+        "name": "思考"
+      },
+      "image": {
+        "name": "图片"
+      },
+      "input_image_name": {
+        "name": "I2I 来源文件"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "正向"
+      },
+      "1": {
+        "name": "负向"
+      },
+      "2": {
+        "name": "回复"
+      },
+      "3": {
+        "name": "chat_p"
+      },
+      "4": {
+        "name": "chat_n"
+      },
+      "5": {
+        "name": "思考"
+      },
+      "6": {
+        "name": "图片"
+      }
+    }
+  }
+}

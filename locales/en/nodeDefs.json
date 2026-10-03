@@ -1,0 +1,55 @@
+{
+  "LiveChatStream": {
+    "display_name": "Live Chat Stream",
+    "description": "Chat with an LLM / VLM / VLA over Ollama and turn the streaming reply into images. Supports I2I through the image input / output.",
+    "inputs": {
+      "prompt_text": {
+        "name": "Positive (A)"
+      },
+      "negative_text": {
+        "name": "Negative (A)"
+      },
+      "response_text": {
+        "name": "Response"
+      },
+      "chat_p_text": {
+        "name": "chat_p"
+      },
+      "chat_n_text": {
+        "name": "chat_n"
+      },
+      "thinking_text": {
+        "name": "Thinking"
+      },
+      "image": {
+        "name": "Image"
+      },
+      "input_image_name": {
+        "name": "I2I source file"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "Positive"
+      },
+      "1": {
+        "name": "Negative"
+      },
+      "2": {
+        "name": "Response"
+      },
+      "3": {
+        "name": "chat_p"
+      },
+      "4": {
+        "name": "chat_n"
+      },
+      "5": {
+        "name": "Thinking"
+      },
+      "6": {
+        "name": "Image"
+      }
+    }
+  }
+}
