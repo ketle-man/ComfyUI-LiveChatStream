@@ -65,4 +65,4 @@ Tips
 - Free VRAM is read with `nvidia-smi` (NVIDIA GPUs). Other GPUs fall back to ComfyUI's own value.
 - Presets are saved to `<ComfyUI user dir>/live_chat_stream/presets.json`.
 - Images dropped for I2I are uploaded to `input/live_chat_stream/`.
-- The Ollama host must be loopback or a private-network address.
+- The Ollama host must be loopback or a private-network address (checked on the server; link-local, multicast and public addresses are rejected and redirects are not followed). If you start ComfyUI with `--listen`, anyone who can reach ComfyUI can use these endpoints, so only do that on a trusted network.

@@ -65,4 +65,4 @@
 - 空闲 VRAM 通过 `nvidia-smi` 获取(NVIDIA GPU)。其他 GPU 会回退到 ComfyUI 自身的数值。
 - 预设保存在 `<ComfyUI 的 user 目录>/live_chat_stream/presets.json`。
 - 为 I2I 拖放的图片会上传到 `input/live_chat_stream/`。
-- Ollama 主机只能是回环地址或私有网络地址。
+- Ollama 主机只能是回环地址或私有网络地址(在服务器端校验;链路本地、组播和公网地址会被拒绝,且不会跟随重定向)。如果使用 `--listen` 启动 ComfyUI,任何能访问 ComfyUI 的人都可以使用这些接口,因此请仅在可信网络中这样做。

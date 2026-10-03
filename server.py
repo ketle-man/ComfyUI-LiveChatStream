@@ -7,6 +7,7 @@ ComfyUIサーバー経由で中継する。接続先はループバック/プラ
 import asyncio
 import ipaddress
 import json
+import socket
 import logging
 from urllib.parse import urlparse
 
@@ -20,20 +21,36 @@ DEFAULT_URL = "http://127.0.0.1:11434"
 routes = PromptServer.instance.routes
 
 
-def _safe_base(url):
+def _ip_allowed(ip):
+    """loopback / プライベートLANのみ。リンクローカル(クラウドのメタデータ 169.254.x.x 等)・マルチキャスト・未指定は不可。"""
+    return (ip.is_loopback or ip.is_private) and not (ip.is_link_local or ip.is_multicast or ip.is_unspecified)
+
+
+def _host_allowed(host):
+    if host == "localhost":
+        return True
+    try:
+        return _ip_allowed(ipaddress.ip_address(host))
+    except ValueError:
+        pass
+    # ホスト名は名前解決し、すべてのアドレスが許可範囲のときだけ許す(公開IPや内部メタデータへの誘導を防ぐ)。
+    # 解決後に別のIPへ変わるDNSリバインディングまでは防げない点に注意。
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except OSError:
+        return False
+    addrs = {i[4][0].split("%")[0] for i in infos}
+    return bool(addrs) and all(_ip_allowed(ipaddress.ip_address(a)) for a in addrs)
+
+
+async def _safe_base(url):
+    """接続先のOllamaを検証して返す。ComfyUIサーバーを経由した任意ホストへのリクエスト(SSRF)を防ぐ。"""
     url = (url or DEFAULT_URL).strip().rstrip("/")
     p = urlparse(url)
     host = p.hostname
-    if p.scheme not in ("http", "https") or not host:
-        raise ValueError("URL must be http(s)://host[:port]")
-    ok = host == "localhost" or host.endswith(".local") or host.endswith(".lan") or "." not in host
-    if not ok:
-        try:
-            ip = ipaddress.ip_address(host)
-            ok = ip.is_loopback or ip.is_private
-        except ValueError:
-            ok = False
-    if not ok:
+    if p.scheme not in ("http", "https") or not host or p.username or p.password:
+        raise ValueError("URL must be http(s)://host[:port] (no credentials)")
+    if not await asyncio.to_thread(_host_allowed, host):
         raise ValueError("Only loopback / private-network Ollama hosts are allowed")
     return url
 
@@ -54,7 +71,7 @@ def _classify(model):
 
 async def _get_json(base, path, timeout=8):
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as s:
-        async with s.get(base + path) as r:
+        async with s.get(base + path, allow_redirects=False) as r:
             r.raise_for_status()
             return await r.json()
 
@@ -62,7 +79,7 @@ async def _get_json(base, path, timeout=8):
 @routes.get("/live_chat_stream/models")
 async def models(request: web.Request):
     try:
-        base = _safe_base(request.query.get("url"))
+        base = await _safe_base(request.query.get("url"))
         tags = await _get_json(base, "/api/tags")
         try:
             version = (await _get_json(base, "/api/version", 3)).get("version")
@@ -79,7 +96,7 @@ async def chat(request: web.Request):
     """Ollama /api/chat のNDJSONストリームをそのまま中継する。"""
     try:
         body = await request.json()
-        base = _safe_base(body.get("url"))
+        base = await _safe_base(body.get("url"))
         model = body.get("model")
         messages = body.get("messages")
         if not model or not isinstance(messages, list):
@@ -100,7 +117,7 @@ async def chat(request: web.Request):
     try:
         timeout = aiohttp.ClientTimeout(total=None, sock_connect=5, sock_read=300)
         async with aiohttp.ClientSession(timeout=timeout) as s:
-            async with s.post(base + "/api/chat", json=payload) as r:
+            async with s.post(base + "/api/chat", json=payload, allow_redirects=False) as r:
                 if r.status != 200:
                     text = (await r.text())[:300]
                     await send_error(f"Ollama HTTP {r.status}: {text}")
@@ -128,7 +145,7 @@ async def decide(request: web.Request):
     """Ollama 0.35+ の /v1/systemone へ中継(VLA=意思決定モデル。imagesはvision対応モデルのみ)。"""
     try:
         body = await request.json()
-        base = _safe_base(body.get("url"))
+        base = await _safe_base(body.get("url"))
         payload = {
             "model": body["model"],
             "state": body.get("state", ""),
@@ -138,7 +155,7 @@ async def decide(request: web.Request):
             payload["images"] = body["images"]
         timeout = aiohttp.ClientTimeout(total=180)
         async with aiohttp.ClientSession(timeout=timeout) as s:
-            async with s.post(base + "/v1/systemone", json=payload) as r:
+            async with s.post(base + "/v1/systemone", json=payload, allow_redirects=False) as r:
                 text = await r.text()
                 try:
                     data = json.loads(text)
@@ -156,7 +173,7 @@ async def _unload_model(session, base, name):
         ("/api/chat", {"model": name, "messages": [], "keep_alive": 0}),
     ):
         try:
-            async with session.post(base + path, json=payload) as r:
+            async with session.post(base + path, json=payload, allow_redirects=False) as r:
                 if r.status == 200:
                     return True
         except Exception:
@@ -169,7 +186,7 @@ async def unload(request: web.Request):
     """Ollamaでロード中のモデルをすべてアンロード(keep_alive=0)。VRAMをComfyUIへ返す用。"""
     try:
         body = await request.json()
-        base = _safe_base(body.get("url"))
+        base = await _safe_base(body.get("url"))
     except Exception as e:
         return web.json_response({"ok": False, "error": str(e)}, status=400)
 
@@ -177,7 +194,7 @@ async def unload(request: web.Request):
     try:
         timeout = aiohttp.ClientTimeout(total=60)
         async with aiohttp.ClientSession(timeout=timeout) as s:
-            async with s.get(base + "/api/ps") as r:
+            async with s.get(base + "/api/ps", allow_redirects=False) as r:
                 r.raise_for_status()
                 loaded = [m.get("name") for m in (await r.json()).get("models", []) if m.get("name")]
             for name in loaded:
@@ -350,7 +367,7 @@ async def vram_prepare(request: web.Request):
     """
     try:
         body = await request.json()
-        base = _safe_base(body.get("url"))
+        base = await _safe_base(body.get("url"))
         mode = body.get("mode")
         if mode not in ("auto", "all"):
             raise ValueError("mode must be auto or all")
@@ -364,7 +381,7 @@ async def vram_prepare(request: web.Request):
         unloaded, failed, skipped = [], [], []
         timeout = aiohttp.ClientTimeout(total=60)
         async with aiohttp.ClientSession(timeout=timeout) as s:
-            async with s.get(base + "/api/ps") as r:
+            async with s.get(base + "/api/ps", allow_redirects=False) as r:
                 r.raise_for_status()
                 loaded = (await r.json()).get("models", [])
             cands = []
