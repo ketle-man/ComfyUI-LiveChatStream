@@ -261,7 +261,7 @@ api.addEventListener("execution_success", onGenEnd);
 api.addEventListener("execution_error", onGenEnd);
 api.addEventListener("execution_interrupted", onGenEnd);
 
-// ---------- VLA(意思決定モデル)による生成画像の判定 ----------
+// ---------- 意思決定モデルによる生成画像の判定 ----------
 function blobToBase64(blob) {
     return new Promise((resolve, reject) => {
         const r = new FileReader();

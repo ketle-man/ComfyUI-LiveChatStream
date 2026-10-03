@@ -4,7 +4,7 @@ English | [日本語](README.ja.md) | [中文](README.zh.md)
 
 ![LiveChatStream](docs/thumb.png)
 
-A ComfyUI custom node that lets you **chat with an LLM / VLM / VLA and turns the streaming reply into images** —
+A ComfyUI custom node that lets you **chat with an LLM / VLM and turns the streaming reply into images** —
 the image is generated as soon as the model has written the prompt, while the rest of the reply is still streaming.
 
 The backend is [Ollama](https://ollama.com) today (the node name is backend-neutral so other backends can be added later).
@@ -13,7 +13,7 @@ The backend is [Ollama](https://ollama.com) today (the node name is backend-neut
 
 - [Ollama](https://ollama.com) running locally (default `http://127.0.0.1:11434`; for another host see *Notes*)
 - At least one chat model. A model with the `vision` capability is needed to attach images (VLM).
-- Optional: a *decision model* with image input (e.g. `clef`, Ollama 0.35.1 or later) to use as the **VLA** that judges the generated images.
+- Optional: a *decision model* that accepts images (e.g. `clef`, Ollama 0.35.1 or later) to judge the generated images. A decision model does not write text; it answers typed questions (yes/no, choice, score) with probabilities.
 - A text-to-image workflow in the same graph (the sample uses SDXL + an LCM LoRA).
 
 ## Installation
@@ -30,7 +30,7 @@ Place this repository under `ComfyUI/custom_nodes/` and restart ComfyUI. No addi
 - **Presets / characters** managed in a modal and stored on the server: plain system prompts, or structured characters (personality, fixed appearance tags, emotion rules) so the character stays consistent and the emotion shows in the picture
 - **Image input / output (I2I)**: connect an image to the `image` input (it has priority over dropped images) or drop / paste / select one; the `image` output feeds `VAE Encode` for img2img
 - **VLM**: attach images to the chat (drop, click, paste)
-- **VLA judge** (optional): scores each generated image for "does it match the request" and quality
+- **Decision-model judge** (optional): scores each generated image for "does it match the request" and quality
 - **VRAM management**: manual `Unload` button, and an option to unload Ollama models before image generation (`auto-free` unloads only as many models as needed to reach the target free VRAM, measured from the driver)
 - **Image ON/OFF** checkbox: turn the whole thing into a plain chat
 - Collapsible *Settings* / *Prompt* sections so the chat stays the main area
@@ -53,7 +53,7 @@ Input: `image` (optional). The prompt boxes are edited from the *Prompt* section
 ## Usage
 
 1. Open `workflows/live_chat_stream.json` (text-to-image) or `workflows/live_chat_stream_i2i.json` (img2img).
-2. Expand **Settings**, check the Ollama URL and pick the LLM / VLM (and VLA if you want judging).
+2. Expand **Settings**, check the Ollama URL and pick the LLM / VLM (and a decision model — the row labeled `VLA` in the UI — if you want judging).
 3. Type a message and press `Ctrl+Enter`. The image is generated as soon as the `<prompt>` block is complete.
 
 Tips

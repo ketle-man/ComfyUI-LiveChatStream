@@ -57,7 +57,7 @@ def _classify(model):
         "name": model.get("name"),
         "size": model.get("size"),
         "capabilities": sorted(caps),
-        # decision(意思決定)モデル = VLA枠。embeddingは除外。
+        # decision(意思決定)モデル。型付きの質問に答える判定役として使う。embeddingは除外。
         "llm": "completion" in caps and "decision" not in caps,
         "vlm": "vision" in caps and "decision" not in caps,
         "vla": "decision" in caps,
@@ -138,7 +138,7 @@ async def chat(request: web.Request):
 
 @routes.post("/live_chat_stream/decide")
 async def decide(request: web.Request):
-    """Ollama 0.35+ の /v1/systemone へ中継(VLA=意思決定モデル。imagesはvision対応モデルのみ)。"""
+    """Ollama 0.35+ の /v1/systemone へ中継(意思決定モデル。imagesはvision対応モデルのみ)。"""
     try:
         body = await request.json()
         base = _ollama_base()
