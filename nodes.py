@@ -85,7 +85,7 @@ class LiveChatStream:
     RETURN_NAMES = ("positive", "negative", "response", "chat_p", "chat_n", "thinking", "image")
     FUNCTION = "run"
     CATEGORY = "LiveChatStream"
-    DESCRIPTION = "LLM/VLM/VLAとチャットし、ストリーミング応答の途中から画像を生成する。画像入力/出力でI2Iに対応。"
+    DESCRIPTION = "Chat with an LLM / VLM / VLA and turn the streaming reply into images. Image input / output enables I2I."
 
     def run(self, prompt_text="", negative_text="", response_text="",
             chat_p_text="", chat_n_text="", thinking_text="",
