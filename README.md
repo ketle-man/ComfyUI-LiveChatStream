@@ -53,7 +53,7 @@ Input: `image` (optional). The prompt boxes are edited from the *Prompt* section
 ## Usage
 
 1. Open `workflows/live_chat_stream.json` (text-to-image) or `workflows/live_chat_stream_i2i.json` (img2img).
-2. Expand **Settings**, check the Ollama URL and pick the LLM / VLM (and a decision model — the row labeled `VLA` in the UI — if you want judging).
+2. Expand **Settings**, check the Ollama URL and pick the LLM / VLM (and a decision model — the `Decision` row — if you want judging).
 3. Type a message and press `Ctrl+Enter`. The image is generated as soon as the `<prompt>` block is complete.
 
 Tips

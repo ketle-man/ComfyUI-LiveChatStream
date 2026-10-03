@@ -475,7 +475,7 @@ function buildUI(node) {
         el("div", { className: "lcs-row" }, el("span", { textContent: "Preset" }), ui.presetSel, ui.presetBtn),
         el("div", { className: "lcs-row" }, el("span", { textContent: "LLM" }), ui.llmSel),
         el("div", { className: "lcs-row" }, el("span", { textContent: "VLM" }), ui.vlmSel),
-        el("div", { className: "lcs-row" }, el("span", { textContent: "VLA" }), ui.vlaSel, el("label", {}, ui.judgeChk, t("judge"))),
+        el("div", { className: "lcs-row" }, el("span", { textContent: "Decision" }), ui.vlaSel, el("label", {}, ui.judgeChk, t("judge"))),
         el("div", { className: "lcs-row" }, ui.srcSel, ui.modeSel, el("label", {}, ui.thinkChk, t("think"))),
         el("div", { className: "lcs-row" }, ui.srcBSel, ui.mindEnLabel, ui.maxBInput, ui.negBInput),
         el("div", { className: "lcs-row" }, ui.vramSel, ui.vramGb, el("span", { textContent: t("gbFree") })),

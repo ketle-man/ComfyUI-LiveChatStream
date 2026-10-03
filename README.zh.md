@@ -53,7 +53,7 @@
 ## 使用方法
 
 1. 打开 `workflows/live_chat_stream.json`(文生图)或 `workflows/live_chat_stream_i2i.json`(图生图)。
-2. 展开 **设置**,确认 Ollama 的 URL,并选择 LLM / VLM(需要评判时再选决策模型,即界面中标有 `VLA` 的一行)。
+2. 展开 **设置**,确认 Ollama 的 URL,并选择 LLM / VLM(需要评判时再选决策模型,即标有 `Decision` 的一行)。
 3. 输入消息并按 `Ctrl+Enter`。`<prompt>` 块一完成就会生成图片。
 
 提示

@@ -1,7 +1,7 @@
 {
   "LiveChatStream": {
     "display_name": "Live Chat Stream",
-    "description": "Ollama の LLM / VLM / VLA とチャットし、ストリーミング応答を画像にします。画像の入出力で I2I にも対応します。",
+    "description": "Ollama の LLM / VLM とチャットし、ストリーミング応答を画像にします(意思決定モデルによる判定も可能)。画像の入出力で I2I にも対応します。",
     "inputs": {
       "prompt_text": {
         "name": "ポジティブ (A)"

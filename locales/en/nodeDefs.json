@@ -1,7 +1,7 @@
 {
   "LiveChatStream": {
     "display_name": "Live Chat Stream",
-    "description": "Chat with an LLM / VLM / VLA over Ollama and turn the streaming reply into images. Supports I2I through the image input / output.",
+    "description": "Chat with an LLM / VLM over Ollama and turn the streaming reply into images, optionally judged by a decision model. Supports I2I through the image input / output.",
     "inputs": {
       "prompt_text": {
         "name": "Positive (A)"

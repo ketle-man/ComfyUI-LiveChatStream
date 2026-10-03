@@ -53,7 +53,7 @@
 ## 使い方
 
 1. `workflows/live_chat_stream.json`(text-to-image)または `workflows/live_chat_stream_i2i.json`(img2img)を開きます。
-2. **設定** を展開し、Ollama の URL を確認して LLM / VLM(判定したい場合は意思決定モデル=UI上の `VLA` 行も)を選びます。
+2. **設定** を展開し、Ollama の URL を確認して LLM / VLM(判定したい場合は意思決定モデル=`Decision` の行も)を選びます。
 3. メッセージを入力して `Ctrl+Enter`。`<prompt>` ブロックが完成した時点で画像が生成されます。
 
 ヒント

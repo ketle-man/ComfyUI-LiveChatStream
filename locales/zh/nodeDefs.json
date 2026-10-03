@@ -1,7 +1,7 @@
 {
   "LiveChatStream": {
     "display_name": "Live Chat Stream",
-    "description": "通过 Ollama 与 LLM / VLM / VLA 聊天,并将流式回复转为图片。通过图片输入 / 输出支持 I2I。",
+    "description": "通过 Ollama 与 LLM / VLM 聊天,并将流式回复转为图片(可用决策模型进行评判)。通过图片输入 / 输出支持 I2I。",
     "inputs": {
       "prompt_text": {
         "name": "正向 (A)"
