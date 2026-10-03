@@ -2,6 +2,8 @@
 
 # ComfyUI-LiveChatStream
 
+![LiveChatStream](docs/thumb.png)
+
 一个 ComfyUI 自定义节点:**与 LLM / VLM / VLA 聊天,并将流式回复转为图片**。
 模型一写完提示词,就会在回复仍在流式输出的过程中开始生成图片。
 

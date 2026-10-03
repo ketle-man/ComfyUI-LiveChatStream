@@ -2,6 +2,8 @@ English | [日本語](README.ja.md) | [中文](README.zh.md)
 
 # ComfyUI-LiveChatStream
 
+![LiveChatStream](docs/thumb.png)
+
 A ComfyUI custom node that lets you **chat with an LLM / VLM / VLA and turns the streaming reply into images** —
 the image is generated as soon as the model has written the prompt, while the rest of the reply is still streaming.
 

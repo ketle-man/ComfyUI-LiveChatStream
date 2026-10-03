@@ -2,6 +2,8 @@
 
 # ComfyUI-LiveChatStream
 
+![LiveChatStream](docs/thumb.png)
+
 **LLM / VLM / VLA とチャットし、ストリーミング応答を画像にする** ComfyUI カスタムノードです。
 モデルがプロンプトを書き終えた時点で、返信の続きをストリーミングしている途中でも画像生成を始めます。
 

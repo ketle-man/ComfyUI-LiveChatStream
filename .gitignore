@@ -4,3 +4,6 @@ __pycache__/
 *.png.tmp
 # 開発の入力に使ったベースワークフロー(サンプルは workflows/ にある)
 /chat_lcm.json
+
+# 開発記録(リポジトリには含めない)
+/DEVLOG.md
