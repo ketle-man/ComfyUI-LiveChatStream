@@ -11,7 +11,7 @@ The backend is [Ollama](https://ollama.com) today (the node name is backend-neut
 
 ## Prerequisites
 
-- [Ollama](https://ollama.com) running locally (default `http://127.0.0.1:11434`)
+- [Ollama](https://ollama.com) running locally (default `http://127.0.0.1:11434`; for another host see *Notes*)
 - At least one chat model. A model with the `vision` capability is needed to attach images (VLM).
 - Optional: a *decision model* with image input (e.g. `clef`, Ollama 0.35.1 or later) to use as the **VLA** that judges the generated images.
 - A text-to-image workflow in the same graph (the sample uses SDXL + an LCM LoRA).
@@ -67,4 +67,4 @@ Tips
 - Free VRAM is read with `nvidia-smi` (NVIDIA GPUs). Other GPUs fall back to ComfyUI's own value.
 - Presets are saved to `<ComfyUI user dir>/live_chat_stream/presets.json`.
 - Images dropped for I2I are uploaded to `input/live_chat_stream/`.
-- The Ollama host must be loopback or a private-network address (checked on the server; link-local, multicast and public addresses are rejected and redirects are not followed). If you start ComfyUI with `--listen`, anyone who can reach ComfyUI can use these endpoints, so only do that on a trusted network.
+- **The Ollama address is set on the server and is never taken from the browser or the request.** The server reads it from the environment variable `LIVE_CHAT_STREAM_OLLAMA_URL`, or from `<ComfyUI user dir>/live_chat_stream/config.json` (`{"ollama_url": "http://192.168.1.20:11434"}`; edits apply without a restart), and defaults to `http://127.0.0.1:11434`. Redirects are not followed. If you start ComfyUI with `--listen`, anyone who can reach ComfyUI can still use the chat routes with *your* Ollama (but cannot point them anywhere else), so only do that on a trusted network.

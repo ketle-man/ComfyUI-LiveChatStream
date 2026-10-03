@@ -5,7 +5,6 @@ import { t } from "./lib/i18n.js";
 
 const NODE_NAME = "LiveChatStream";
 const LS_KEY = "live_chat_stream_settings";
-const DEFAULT_URL = "http://127.0.0.1:11434";
 const NODE_W = 560;
 const UI_H = 560;
 const LIVE_INTERVAL_MS = 900;
@@ -201,7 +200,7 @@ async function prepareVram(inst) {
         const res = await fetch(api.apiURL("/live_chat_stream/vram_prepare"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: ui.urlInput.value.trim() || DEFAULT_URL, mode, target_gb: parseFloat(ui.vramGb.value) || 8, exclude }),
+            body: JSON.stringify({ mode, target_gb: parseFloat(ui.vramGb.value) || 8, exclude }),
         });
         const d = await res.json();
         if (!res.ok || !d.ok) throw new Error(d.error || `HTTP ${res.status}`);
@@ -282,7 +281,6 @@ async function judgeImage(inst, img) {
     ui.setStatus(t("judging"));
     const state = `User request: ${inst._lastUserText || ""}\nImage prompt used: ${inst._lastPrompt || ""}`;
     const body = JSON.stringify({
-        url: ui.urlInput.value || DEFAULT_URL,
         model,
         state,
         images: [b64],
@@ -387,7 +385,8 @@ function buildUI(node) {
     const ui = { attach: [], abort: null };
 
     const fillOptions = (sel, pairs) => { for (const [v, k] of pairs) sel.appendChild(el("option", { value: v, textContent: t(k) })); };
-    ui.urlInput = el("input", { type: "text", value: s.url || DEFAULT_URL, title: "Ollama URL", style: "flex:1" });
+    // Ollamaのアドレスはブラウザ(リクエスト)ではなくサーバー側の設定で決める
+    ui.ollamaNote = el("span", { textContent: t("ollamaServerSetting"), title: t("ollamaServerSettingTitle"), style: "flex:1;opacity:.75" });
     ui.refreshBtn = el("button", { textContent: "⟳", title: t("reloadModels") });
     ui.llmSel = el("select", { title: t("llmTitle") });
     ui.vlmSel = el("select", { title: t("vlmTitle") });
@@ -472,7 +471,7 @@ function buildUI(node) {
         return { head, body, sum };
     };
     const settingsSec = makeSection("settings", t("settings"), [
-        el("div", { className: "lcs-row" }, el("span", { textContent: "Ollama" }), ui.urlInput, ui.refreshBtn),
+        el("div", { className: "lcs-row" }, el("span", { textContent: "Ollama" }), ui.ollamaNote, ui.refreshBtn),
         el("div", { className: "lcs-row" }, el("span", { textContent: "Preset" }), ui.presetSel, ui.presetBtn),
         el("div", { className: "lcs-row" }, el("span", { textContent: "LLM" }), ui.llmSel),
         el("div", { className: "lcs-row" }, el("span", { textContent: "VLM" }), ui.vlmSel),
@@ -584,11 +583,9 @@ function buildUI(node) {
     };
 
     ui.loadModels = async () => {
-        const url = ui.urlInput.value.trim() || DEFAULT_URL;
-        saveSettings({ url });
         ui.setStatus(t("loadingModels"));
         try {
-            const res = await fetch(api.apiURL(`/live_chat_stream/models?url=${encodeURIComponent(url)}`));
+            const res = await fetch(api.apiURL("/live_chat_stream/models"));
             const data = await res.json();
             if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
             const st = loadSettings();
@@ -603,7 +600,6 @@ function buildUI(node) {
     };
 
     ui.refreshBtn.onclick = ui.loadModels;
-    ui.urlInput.onchange = ui.loadModels;
     ui.llmSel.onchange = () => saveSettings({ llm: ui.llmSel.value });
     ui.vlmSel.onchange = () => saveSettings({ vlm: ui.vlmSel.value });
     ui.vlaSel.onchange = () => saveSettings({ vla: ui.vlaSel.value });
@@ -677,7 +673,7 @@ function buildUI(node) {
             const res = await fetch(api.apiURL("/live_chat_stream/unload"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url: ui.urlInput.value.trim() || DEFAULT_URL }),
+                body: "{}",
             });
             const data = await res.json();
             if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -829,7 +825,7 @@ async function send(node) {
         const res = await fetch(api.apiURL("/live_chat_stream/chat"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: ui.urlInput.value.trim() || DEFAULT_URL, model, messages, think: thinkFlag }),
+            body: JSON.stringify({ model, messages, think: thinkFlag }),
             signal: ctrl.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

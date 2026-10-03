@@ -1,57 +1,53 @@
 """Ollama プロキシ(ストリーミングチャット / モデル一覧 / 意思決定API)。
 
 ブラウザから直接 Ollama を叩くとCORS・混在コンテンツで詰まることがあるため、
-ComfyUIサーバー経由で中継する。接続先はループバック/プライベートLANに限定(SSRF対策)。
+ComfyUIサーバー経由で中継する。**接続先のOllamaアドレスはサーバー側の設定で決め、リクエストからは一切受け取らない**
+(環境変数 LIVE_CHAT_STREAM_OLLAMA_URL、または <user>/live_chat_stream/config.json の "ollama_url"、既定は127.0.0.1)。
 """
 
 import asyncio
-import ipaddress
 import json
-import socket
 import logging
+import os
 from urllib.parse import urlparse
 
 import aiohttp
+import folder_paths
 from aiohttp import web
 from server import PromptServer
 
 logger = logging.getLogger("LiveChatStream")
 
 DEFAULT_URL = "http://127.0.0.1:11434"
+ENV_OLLAMA_URL = "LIVE_CHAT_STREAM_OLLAMA_URL"
 routes = PromptServer.instance.routes
 
 
-def _ip_allowed(ip):
-    """loopback / プライベートLANのみ。リンクローカル(クラウドのメタデータ 169.254.x.x 等)・マルチキャスト・未指定は不可。"""
-    return (ip.is_loopback or ip.is_private) and not (ip.is_link_local or ip.is_multicast or ip.is_unspecified)
+def _data_dir():
+    getter = getattr(folder_paths, "get_user_directory", None)
+    base = getter() if getter else os.path.join(folder_paths.base_path, "user")
+    d = os.path.join(base, "live_chat_stream")
+    os.makedirs(d, exist_ok=True)
+    return d
 
 
-def _host_allowed(host):
-    if host == "localhost":
-        return True
-    try:
-        return _ip_allowed(ipaddress.ip_address(host))
-    except ValueError:
-        pass
-    # ホスト名は名前解決し、すべてのアドレスが許可範囲のときだけ許す(公開IPや内部メタデータへの誘導を防ぐ)。
-    # 解決後に別のIPへ変わるDNSリバインディングまでは防げない点に注意。
-    try:
-        infos = socket.getaddrinfo(host, None)
-    except OSError:
-        return False
-    addrs = {i[4][0].split("%")[0] for i in infos}
-    return bool(addrs) and all(_ip_allowed(ipaddress.ip_address(a)) for a in addrs)
+def _ollama_base():
+    """Ollamaのアドレス。サーバーの運営者が決める値で、リクエスト(ブラウザ)からは受け取らない。
 
-
-async def _safe_base(url):
-    """接続先のOllamaを検証して返す。ComfyUIサーバーを経由した任意ホストへのリクエスト(SSRF)を防ぐ。"""
-    url = (url or DEFAULT_URL).strip().rstrip("/")
+    優先順位: 環境変数 LIVE_CHAT_STREAM_OLLAMA_URL → <user>/live_chat_stream/config.json の "ollama_url" → 既定。
+    呼び出しごとに読むので、config.json の変更は再起動なしで反映される。
+    """
+    url = os.environ.get(ENV_OLLAMA_URL, "").strip()
+    if not url:
+        try:
+            with open(os.path.join(_data_dir(), "config.json"), "r", encoding="utf-8") as f:
+                url = str((json.load(f) or {}).get("ollama_url") or "").strip()
+        except (OSError, ValueError, AttributeError):
+            url = ""
+    url = (url or DEFAULT_URL).rstrip("/")
     p = urlparse(url)
-    host = p.hostname
-    if p.scheme not in ("http", "https") or not host or p.username or p.password:
-        raise ValueError("URL must be http(s)://host[:port] (no credentials)")
-    if not await asyncio.to_thread(_host_allowed, host):
-        raise ValueError("Only loopback / private-network Ollama hosts are allowed")
+    if p.scheme not in ("http", "https") or not p.hostname or p.username or p.password:
+        raise ValueError("The configured Ollama URL must be http(s)://host[:port] (no credentials)")
     return url
 
 
@@ -79,7 +75,7 @@ async def _get_json(base, path, timeout=8):
 @routes.get("/live_chat_stream/models")
 async def models(request: web.Request):
     try:
-        base = await _safe_base(request.query.get("url"))
+        base = _ollama_base()
         tags = await _get_json(base, "/api/tags")
         try:
             version = (await _get_json(base, "/api/version", 3)).get("version")
@@ -96,7 +92,7 @@ async def chat(request: web.Request):
     """Ollama /api/chat のNDJSONストリームをそのまま中継する。"""
     try:
         body = await request.json()
-        base = await _safe_base(body.get("url"))
+        base = _ollama_base()
         model = body.get("model")
         messages = body.get("messages")
         if not model or not isinstance(messages, list):
@@ -145,7 +141,7 @@ async def decide(request: web.Request):
     """Ollama 0.35+ の /v1/systemone へ中継(VLA=意思決定モデル。imagesはvision対応モデルのみ)。"""
     try:
         body = await request.json()
-        base = await _safe_base(body.get("url"))
+        base = _ollama_base()
         payload = {
             "model": body["model"],
             "state": body.get("state", ""),
@@ -186,7 +182,7 @@ async def unload(request: web.Request):
     """Ollamaでロード中のモデルをすべてアンロード(keep_alive=0)。VRAMをComfyUIへ返す用。"""
     try:
         body = await request.json()
-        base = await _safe_base(body.get("url"))
+        base = _ollama_base()
     except Exception as e:
         return web.json_response({"ok": False, "error": str(e)}, status=400)
 
@@ -208,11 +204,8 @@ async def unload(request: web.Request):
 # ---------------------------------------------------------------------------
 # プリセット(システムプロンプト / キャラクター)の保存。ComfyUIのuserフォルダ配下のJSON。
 # ---------------------------------------------------------------------------
-import os
 import re
 import tempfile
-
-import folder_paths
 
 _ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 _MAX_PRESETS = 100
@@ -221,11 +214,7 @@ _TEXT_FIELDS = ("system", "persona", "appearance", "emotion")
 
 
 def _presets_path():
-    getter = getattr(folder_paths, "get_user_directory", None)
-    base = getter() if getter else os.path.join(folder_paths.base_path, "user")
-    d = os.path.join(base, "live_chat_stream")
-    os.makedirs(d, exist_ok=True)
-    return os.path.join(d, "presets.json")
+    return os.path.join(_data_dir(), "presets.json")
 
 
 def _clean_preset(p):
@@ -367,7 +356,7 @@ async def vram_prepare(request: web.Request):
     """
     try:
         body = await request.json()
-        base = await _safe_base(body.get("url"))
+        base = _ollama_base()
         mode = body.get("mode")
         if mode not in ("auto", "all"):
             raise ValueError("mode must be auto or all")

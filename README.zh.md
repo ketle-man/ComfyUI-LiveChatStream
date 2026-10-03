@@ -11,7 +11,7 @@
 
 ## 前提条件
 
-- 在本地运行的 [Ollama](https://ollama.com)(默认 `http://127.0.0.1:11434`)
+- 在本地运行的 [Ollama](https://ollama.com)(默认 `http://127.0.0.1:11434`;其他主机请见*注意事项*)
 - 至少一个聊天模型。附加图片(VLM)需要支持 `vision` 的模型。
 - 可选:支持图片输入的*决策模型*(如 `clef`,需要 Ollama 0.35.1 或更高版本),可用作评判生成图片的 **VLA**。
 - 同一工作流中的文生图流程(示例使用 SDXL + LCM LoRA)
@@ -67,4 +67,4 @@
 - 空闲 VRAM 通过 `nvidia-smi` 获取(NVIDIA GPU)。其他 GPU 会回退到 ComfyUI 自身的数值。
 - 预设保存在 `<ComfyUI 的 user 目录>/live_chat_stream/presets.json`。
 - 为 I2I 拖放的图片会上传到 `input/live_chat_stream/`。
-- Ollama 主机只能是回环地址或私有网络地址(在服务器端校验;链路本地、组播和公网地址会被拒绝,且不会跟随重定向)。如果使用 `--listen` 启动 ComfyUI,任何能访问 ComfyUI 的人都可以使用这些接口,因此请仅在可信网络中这样做。
+- **Ollama 地址在服务器端设置,绝不会从浏览器或请求中获取。** 服务器从环境变量 `LIVE_CHAT_STREAM_OLLAMA_URL` 或 `<ComfyUI 的 user 目录>/live_chat_stream/config.json`(`{"ollama_url": "http://192.168.1.20:11434"}`,修改后无需重启)读取,未设置时使用 `http://127.0.0.1:11434`。不会跟随重定向。如果使用 `--listen` 启动 ComfyUI,任何能访问 ComfyUI 的人仍可对*你的* Ollama 使用聊天接口(但无法指向其他地址),因此请仅在可信网络中这样做。
